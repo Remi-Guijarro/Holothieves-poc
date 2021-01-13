@@ -13,7 +13,7 @@ void setup() {
 void loop() {
   delay(500);
   sensorValue = analogRead(analogInPin);
-  Serial.println(sensorValue);
+//  Serial.println(sensorValue);
 
   if (sensorValue > sensorLimit && !isMessageSent) {
     //isMessageSent = true;
