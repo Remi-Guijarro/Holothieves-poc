@@ -13,6 +13,9 @@ isVerified = False
 
 isCard = False
 
+isWet = False
+sensorLimit = 0.1
+
 def on_key_received(*args, **kwargs):
     global test, pos, isVerified
     if isVerified:
@@ -42,9 +45,11 @@ def on_card_received(*args, **kwargs):
         if c == 'x':
             isCard = True
             print("Open")
-    
+
 
 if __name__ == '__main__':
+    a0 = boardKeypad.get_pin('a:0:i')
+        
     itKeypad = pyfirmata.util.Iterator(boardKeypad)
     itKeypad.start()
     
@@ -54,10 +59,18 @@ if __name__ == '__main__':
     boardKeypad.add_cmd_handler(pyfirmata.pyfirmata.STRING_DATA, on_key_received)
     #boardRFID.add_cmd_handler(pyfirmata.pyfirmata.STRING_DATA, on_card_received)
     
+    
+    
     print("loop")
     while True:
         time.sleep(0.1)
-        if isVerified == False:
-            boardKeypad.send_sysex(0x08, [])
+        #if isVerified == False:
+            #boardKeypad.send_sysex(0x08, [])
         #if isCard == False:
             #boardRFID.send_sysex(0x09, [])
+        if isWet == False:
+            sensorValue = a0.read()
+            print(sensorValue)
+            if sensorValue > sensorLimit:
+                print("in_water")
+                isWet = True
