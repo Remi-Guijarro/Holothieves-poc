@@ -2,8 +2,9 @@
 import pyfirmata
 import time
 
-boardKeypad = pyfirmata.Arduino('/dev/cu.usbmodem4301')
+#boardKeypad = pyfirmata.Arduino('/dev/cu.usbmodem4301')
 #boardRFID = pyfirmata.Arduino('/dev/cu.usbmodem4301')
+boardJoystick = pyfirmata.Arduino('COM4')
 print("Communication Successfully started")
 
 pos = 0
@@ -15,6 +16,9 @@ isCard = False
 
 isWet = False
 sensorLimit = 0.1
+
+isVentFinished = False
+
 
 def on_key_received(*args, **kwargs):
     global test, pos, isVerified
@@ -48,16 +52,22 @@ def on_card_received(*args, **kwargs):
 
 
 if __name__ == '__main__':
-    a0 = boardKeypad.get_pin('a:0:i')
+    #a0 = boardKeypad.get_pin('a:0:i')
+    a0 = boardJoystick.get_pin('a:0:i')
+    a1 = boardJoystick.get_pin('a:1:i')
+
+    itJoystick = pyfirmata.util.Iterator(boardJoystick)
+    itJoystick.start()
         
-    itKeypad = pyfirmata.util.Iterator(boardKeypad)
-    itKeypad.start()
+    #itKeypad = pyfirmata.util.Iterator(boardKeypad)
+    #itKeypad.start()
     
     #itRFID = pyfirmata.util.Iterator(boardRFID)
     #itRFID.start()
     
-    boardKeypad.add_cmd_handler(pyfirmata.pyfirmata.STRING_DATA, on_key_received)
+    #boardKeypad.add_cmd_handler(pyfirmata.pyfirmata.STRING_DATA, on_key_received)
     #boardRFID.add_cmd_handler(pyfirmata.pyfirmata.STRING_DATA, on_card_received)
+
     
     
     
@@ -68,9 +78,15 @@ if __name__ == '__main__':
             #boardKeypad.send_sysex(0x08, [])
         #if isCard == False:
             #boardRFID.send_sysex(0x09, [])
-        if isWet == False:
-            sensorValue = a0.read()
-            print(sensorValue)
-            if sensorValue > sensorLimit:
-                print("in_water")
-                isWet = True
+        #if isWet == False:
+        #    sensorValue = a0.read()
+        #    print(sensorValue)
+        #    if sensorValue > sensorLimit:
+        #        print("in_water")
+        #        isWet = True
+        if isVentFinished==False:
+            xValue = a0.read()
+            yValue = a1.read()
+            print(xValue)
+            print(yValue)
+
