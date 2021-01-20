@@ -33,7 +33,21 @@
 #include <Wire.h>
 #include <Firmata.h>
 
+/*==============================================================================
+ * Digicode
+ *============================================================================*/
 #include <Keypad.h>
+
+/*==============================================================================
+ * Capteur RFID
+ *============================================================================*/
+#include <SPI.h> 
+#include <MFRC522.h>
+// Affectation des broches
+#define RST_PIN 9
+#define SS_PIN 10
+MFRC522 mfrc522(SS_PIN, RST_PIN);
+bool isCardPresented = false;
 
 // move the following defines to Firmata.h?
 #define I2C_WRITE B00000000
@@ -545,6 +559,16 @@ void sysexCallback(byte command, byte argc, byte *argv)
       Serial.write(END_SYSEX);
       break;
     }
+    case 0x09:
+    {
+      Serial.write(START_SYSEX);
+      Serial.write(STRING_DATA);
+      if (isCardPresented) {
+        Serial.println("x");
+      }
+      Serial.write(END_SYSEX);
+      break;
+    }
   }
 }
 
@@ -630,6 +654,11 @@ void setup()
 
   Firmata.begin(57600);
   systemResetCallback();  // reset to default config
+
+  while (!Serial);
+  SPI.begin();
+  mfrc522.PCD_Init();
+  //mfrc522.PCD_DumpVersionToSerial();
 }
 
 /*==============================================================================
@@ -669,6 +698,18 @@ void loop()
       for (byte i = 0; i < queryIndex + 1; i++) {
         readAndReportData(query[i].addr, query[i].reg, query[i].bytes);
       }
+    }
+  }
+
+  // Attente d'une carte RFID
+  if (!mfrc522.PICC_IsNewCardPresent()) {
+    return; 
+  }
+  
+  // Récupération des informations de la carte RFID
+  if (mfrc522.PICC_ReadCardSerial()) {
+    if(!isCardPresented) {
+      isCardPresented = true;
     }
   }
 }
