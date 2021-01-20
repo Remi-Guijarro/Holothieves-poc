@@ -32,6 +32,7 @@
 #include <Servo.h>
 #include <Wire.h>
 #include <Firmata.h>
+
 #include <Keypad.h>
 
 // move the following defines to Firmata.h?
@@ -540,8 +541,7 @@ void sysexCallback(byte command, byte argc, byte *argv)
       Serial.write(START_SYSEX);
       Serial.write(STRING_DATA);
       char customKey = customKeypad.waitForKey();
-      //Serial.println(customKey);
-      Firmata.sendString("test");
+      Serial.println(customKey);
       Serial.write(END_SYSEX);
       break;
     }
@@ -628,7 +628,7 @@ void setup()
   Firmata.attach(START_SYSEX, sysexCallback);
   Firmata.attach(SYSTEM_RESET, systemResetCallback);
 
-  Firmata.begin(115200);
+  Firmata.begin(57600);
   systemResetCallback();  // reset to default config
 }
 
