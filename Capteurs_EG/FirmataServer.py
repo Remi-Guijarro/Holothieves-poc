@@ -2,110 +2,138 @@
 import pyfirmata
 import time
 
-#boardKeypad = pyfirmata.Arduino('/dev/cu.usbmodem4301')
-#boardRFID = pyfirmata.Arduino('/dev/cu.usbmodem4301')
-boardJoystick = pyfirmata.Arduino('COM4')
-#alarmBoard = pyfirmata.arduino('COM4')
+board = pyfirmata.Arduino('/dev/cu.usbmodem4301')
 print("Communication Successfully started")
 
+
+#Joystick
+a0_joystick = board.get_pin('a:0:i')
+a1_joystick = board.get_pin('a:1:i')
+isVentFinished = False
+
+#Keypad
 pos = 0
 password = ['1', '2', '3', '4']
 test = ['0', '0', '0', '0']
-isVerified = False
+isVerified = True
 
-isCard = False
-
-isWet = False
-sensorLimit = 0.1
-
-
-isVentFinished = False
-
+#Alarm
+d0_alarm = board.get_pin('d:3:p')
+d1_alarm = board.get_pin('d:5:o')
 isAlarmOn = False
 
+#WaterSensor
+a3_waterSensor = board.get_pin('a:3:i')
+isWet = True
+sensorLimit = 0.1
 
+#Card
+isCard = True
 
-def on_key_received(*args, **kwargs):
-    global test, pos, isVerified
-    if isVerified:
-        return
+#Button
+#?
+
+def joystick_xy():
+    xValue = a0_joystick.read()
+    yValue = a1_joystick.read()
+    print(xValue)
+    print(yValue)
+    return [xValue, yValue]
+
+def on_message_received(*args, **kwargs):
+    if len(args) == 0:
+        return False
     c = chr(args[0])
-    print('#', c)
+    if c == 'x' and isCard == False:
+        return on_card_received()
+    elif isVerified == False:
+        return on_key_received(c)
+
+def send_keypad_command():
+    board.send_sysex(0x08, [])
+    
+def send_card_command():
+    board.send_sysex(0x09, [])
+
+def on_key_received(c):
+    global test, pos, isVerified
     if c == '*':
         print("remise à 0")
         pos = 0
         test = ['0', '0', '0', '0']
-        return
+        return False
     test[pos] = c
     pos = pos + 1
     if pos == 4:
         if test[0] == password[0] and test[1] == password[1] and test[2] == password[2] and test[3] == password[3]:
             isVerified = True
+            isAlarmOn = True
+            isWet = False
             print("verified")
+            return True
         else:
             print("failed")
-        pos = 0
-        test = ['0', '0', '0', '0']
+            pos = 0
+            test = ['0', '0', '0', '0']
+            return False
 
 
-def on_card_received(*args, **kwargs):
+def on_card_received():
     global isCard
-    if len(args) > 0:
-        c = chr(args[0])
-        if c == 'x':
-            isCard = True
-            print("Open")
+    isCard = True
+    print("Open")
+    return True
 
 
 def trigger_alarm():
-    alarmBoard.digital[3].mode = pyfirmata.OUTPUT  # set digital pin to output mode
-    alarmBoard.digital[5].mode = pyfirmata.OUTPUT
-    BUZZER_PIN = alarmBoard.get_pin('d:3:p')  # set digital pin 3 to pwn communication
-    BUZZER_PIN.write(0.5)  # analog write equivalent
-    alarmBoard.digital[5].write(1)  # digital write equivalent
+    d0_alarm.write(0.5)
+    d1_alarm.write(1)
     time.sleep(1)
-    BUZZER_PIN.write(0.1)
-    alarmBoard.digital[5].write(0)
+    d0_alarm.write(0.1)
+    d1_alarm.write(0)
+
+
+def waterSensor():
+    sensorValue = a0.read()
+    if sensorValue > sensorLimit:
+        print("in_water")
+        isWet = True
+        isAlarmOn = False
+        isCard = False
 
 
 if __name__ == '__main__':
-    #a0 = boardKeypad.get_pin('a:0:i')
-
-    a0 = boardJoystick.get_pin('a:0:i')
-    a1 = boardJoystick.get_pin('a:1:i')
-
-    itJoystick = pyfirmata.util.Iterator(boardJoystick)
-    itJoystick.start()
-        
-    #itKeypad = pyfirmata.util.Iterator(boardKeypad)
-    #itKeypad.start()
+    it = pyfirmata.util.Iterator(board)
+    it.start()
     
-    #itRFID = pyfirmata.util.Iterator(boardRFID)
-    #itRFID.start()
-    
-    #boardKeypad.add_cmd_handler(pyfirmata.pyfirmata.STRING_DATA, on_key_received)
-    #boardRFID.add_cmd_handler(pyfirmata.pyfirmata.STRING_DATA, on_card_received)
-    
-    
+    board.add_cmd_handler(pyfirmata.pyfirmata.STRING_DATA, on_message_received)
     
     print("loop")
     while True:
         time.sleep(0.1)
-        #if isVerified == False:
-            #boardKeypad.send_sysex(0x08, [])
-        #if isCard == False:
-            #boardRFID.send_sysex(0x09, [])
-        #if isWet == False:
-        #    sensorValue = a0.read()
-        #    print(sensorValue)
-        #if sensorValue > sensorLimit:
-        #        print("in_water")
-        #        isWet = True
-        if isVentFinished==False:
-            xValue = a0.read()
-            yValue = a1.read()
-            print(xValue)
-            print(yValue)
-        #if isAlarmOn:
-            #trigger_alarm()
+        
+        if isVentFinished == False:
+            xy = joystick_xy()
+            #envoie xy au caque
+            #change la valeur de isVentFinished à True quand le drone est à la fin du labyrinthe
+            #change la valeur de isVerified à False """"""
+            
+        if isVerified == False:
+            send_keypad_command()
+            
+        if isAlarmOn:
+            trigger_alarm()
+            
+        if isWet == False:
+            waterSensor()
+            
+        if isCard == False:
+            send_card_command()
+            
+        #button ?
+            
+        
+        
+        
+        
 
