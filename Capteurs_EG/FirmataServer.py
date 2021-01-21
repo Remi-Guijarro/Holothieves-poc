@@ -42,12 +42,12 @@ def joystick_xy():
 
 def on_message_received(*args, **kwargs):
     if len(args) == 0:
-        return False
+        return
     c = chr(args[0])
     if c == 'x' and isCard == False:
-        return on_card_received()
+        on_card_received()
     elif isVerified == False:
-        return on_key_received(c)
+        on_key_received(c)
 
 def send_keypad_command():
     board.send_sysex(0x08, [])
@@ -120,15 +120,18 @@ if __name__ == '__main__':
             
         if isVerified == False:
             send_keypad_command()
+            #envoyer un message au casque quand le code est bon
             
         if isAlarmOn:
             trigger_alarm()
             
         if isWet == False:
             waterSensor()
+            #envoyer un message au casque quand l'alarme est désactivé
             
         if isCard == False:
             send_card_command()
+            #envoyer un message au casque quand la carte est passé
             
         #button ?
             
