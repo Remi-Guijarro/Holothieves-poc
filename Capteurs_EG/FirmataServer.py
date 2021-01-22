@@ -101,16 +101,20 @@ def waterSensor():
         isAlarmOn = False
         isCard = False
 
-
-if __name__ == '__main__':
+def start_iterator():
     it = pyfirmata.util.Iterator(board)
     it.start()
-    
     board.add_cmd_handler(pyfirmata.pyfirmata.STRING_DATA, on_message_received)
+
+if __name__ == '__main__':
+    #la fonction main est à déplacer dans le serveur TCP
+    start_iterator()
     
     print("loop")
     while True:
         time.sleep(0.1)
+        
+        #attend le casque
         
         if isVentFinished == False:
             xy = joystick_xy()
