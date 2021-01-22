@@ -2,26 +2,7 @@
 import pyfirmata
 import time
 
-#boardKeypad = pyfirmata.Arduino('/dev/cu.usbmodem4301')
-#boardRFID = pyfirmata.Arduino('/dev/cu.usbmodem4301')
-boardJoystick = pyfirmata.Arduino('COM4')
-#alarmBoard = pyfirmata.arduino('COM4')
-print("Communication Successfully started")
 
-pos = 0
-password = ['1', '2', '3', '4']
-test = ['0', '0', '0', '0']
-isVerified = False
-
-isCard = False
-
-isWet = False
-sensorLimit = 0.1
-
-
-isVentFinished = False
-
-isAlarmOn = False
 
 
 

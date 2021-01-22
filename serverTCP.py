@@ -1,14 +1,46 @@
 import socket
+#import importlib
 
-import serial
-from serial import *
+import pyfirmata
+import time
+
+from FirmataServer import *
+#import FirmataServer as firmataServer
 
 
-ser = serial.Serial('COM4', 115200, write_timeout=4)
+#import serial
+#from serial import *
+
+#boardKeypad = pyfirmata.Arduino('/dev/cu.usbmodem4301')
+#boardRFID = pyfirmata.Arduino('/dev/cu.usbmodem4301')
+boardJoystick = pyfirmata.Arduino('COM4')
+#alarmBoard = pyfirmata.arduino('COM4')
+print("Communication Successfully started")
 
 
-def write_command_to_arduino(command):
-    ser.write(command.encode())
+pos = 0
+password = ['1', '2', '3', '4']
+test = ['0', '0', '0', '0']
+isVerified = False
+
+isCard = False
+
+isWet = False
+sensorLimit = 0.1
+
+
+isVentFinished = False
+
+isAlarmOn = False
+
+
+#importlib.import_module("FirmataServer")
+
+#ser = serial.Serial('COM4', 115200, write_timeout=4)
+
+
+#def write_command_to_arduino(command):
+    #ser.write(command.encode())
 
 
 def mysend(client_socket, data):
@@ -35,9 +67,11 @@ def myreceive(_socket):
 
 
 def joystick_streaming(client_socket):
-    write_command_to_arduino("read_joystick")
+    #write_command_to_arduino("read_joystick")
+
     client_socket.setblocking(False)
     while 1:
+        time.sleep(0.5)
         try:
             client_msg = client_socket.recv(1024)
 
@@ -54,10 +88,15 @@ def joystick_streaming(client_socket):
             client_socket.setblocking(True)
             break
         else:
-            arduino_data = ser.readline()
-            print("arduino_data")
-            print(arduino_data)
-            mysend(client_socket, arduino_data)
+            #arduino_data = ser.readline()
+            xValue = a0.read()
+            yValue = a1.read()
+            print(type(xValue))
+            string = str(xValue)+";"+str(yValue)
+            print(string)
+            data = bytes(string, 'utf-8')
+            #print(arduino_data)
+            mysend(client_socket, data)
             print("ok")
     return
 
@@ -79,7 +118,7 @@ def keypad_streaming(client_socket):
             client_socket.setblocking(True)
             break
         else:
-            arduino_data = ser.readline()
+            #arduino_data = ser.readline()
             print(arduino_data)
             mysend(client_socket, arduino_data)
             print("ok")
@@ -111,13 +150,21 @@ if __name__ == "__main__":
     client, address = server_socket.accept()
     print("{} connected".format(address))
 
+    #Joystick
+    a0 = boardJoystick.get_pin('a:0:i')
+    a1 = boardJoystick.get_pin('a:1:i')
+    itJoystick = pyfirmata.util.Iterator(boardJoystick)
+    itJoystick.start()
+
 
     while 1:
-
+        time.sleep(0.1)
         #msg = myreceive(client)
 
         msg = client.recv(1024)
         msg = msg.decode("utf-8")
+
+
 
         #print(msg)
         #print("b'read_joystick'")
