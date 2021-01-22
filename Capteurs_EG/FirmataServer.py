@@ -31,7 +31,8 @@ sensorLimit = 0.1
 isCard = True
 
 #Button
-#?
+d0_button = board.get_pin('d:4:i')
+isButtonPressed = True
 
 def joystick_xy():
     xValue = a0_joystick.read()
@@ -100,6 +101,17 @@ def waterSensor():
         isWet = True
         isAlarmOn = False
         isCard = False
+    
+    
+def button_pressed():
+    global isButtonPressed
+    value = d0_button.read()
+    if value != 0:
+        isButtonPressed = True
+        return True
+    else:
+        return False
+    
 
 def start_iterator():
     it = pyfirmata.util.Iterator(board)
@@ -137,10 +149,8 @@ if __name__ == '__main__':
             send_card_command()
             #envoyer un message au casque quand la carte est passé
             
-        #button ?
+        if isButtonPressed:
+            if button_pressed():
+                #envoyer un message au casque
+                print("button pressed")
             
-        
-        
-        
-        
-
