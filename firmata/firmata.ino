@@ -1,6 +1,7 @@
 
 
 
+
 /*
  * Firmata is a generic protocol for communicating with microcontrollers
  * from software on a host computer. It is intended to work with
@@ -116,8 +117,8 @@ char hexaKeys[ROWS][COLS] = {
   {'7','8','9','C'},
   {'*','0','#','D'}
 };
-byte rowPins[ROWS] = {11, 10, 9, 8}; //connect to the row pinouts of the keypad
-byte colPins[COLS] = {5, 4, 3, 2}; //connect to the column pinouts of the keypad
+byte rowPins[ROWS] = {26, 28, 30, 32}; //connect to the row pinouts of the keypad 111098
+byte colPins[COLS] = {37, 39, 41, 43}; //connect to the column pinouts of the keypad 5432
 
 //initialize an instance of class NewKeypad
 Keypad customKeypad = Keypad( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS); 
@@ -557,7 +558,7 @@ void sysexCallback(byte command, byte argc, byte *argv)
     { 
       Serial.write(START_SYSEX);
       Serial.write(STRING_DATA);
-      char customKey = customKeypad.waitForKey();
+      char customKey = customKeypad.getKey();
       Serial.println(customKey);
       Serial.write(END_SYSEX);
       break;
@@ -566,8 +567,13 @@ void sysexCallback(byte command, byte argc, byte *argv)
     {
       Serial.write(START_SYSEX);
       Serial.write(STRING_DATA);
+
+      
       if (isCardPresented) {
         Serial.println("x");
+      }
+      else{
+        Serial.print(" ");
       }
       Serial.write(END_SYSEX);
       break;
