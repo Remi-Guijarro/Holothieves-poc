@@ -30,29 +30,30 @@ sensorLimit = 0.1
 sensor_value = 0
 
 #Card
-isCard = False#True
+isCard = True
 
 #Button
-#?
+d0_button = board.get_pin('d:7:i')
+isButtonPressed = False
+buttonCanBePressed = False
 
 def joystick_xy():
     xValue = a0_joystick.read()
     yValue = a1_joystick.read()
-    print(a3_waterSensor.read())
-    print(xValue)
-    print(yValue)
+    #print(xValue)
+    #print(yValue)
     return [xValue, yValue]
 
 
 
 def on_message_received(*args, **kwargs):
-    print("on_message_received()")
-    print(len(args))
-    print(args[0])
+    #print("on_message_received()")
+    #print(len(args))
+    #print(args[0])
     if len(args) == 0 or args[0]==0:
         return
     c = chr(args[0])
-    print("c :"+c+"c")
+    #print("c :"+c+"c")
     if c == 'x' and isCard == False:
         print("on_card_received()")
         on_card_received()
@@ -61,10 +62,14 @@ def on_message_received(*args, **kwargs):
 
 def send_keypad_command():
     board.send_sysex(0x08, [])
-    print("KeyPad")
+    #print("KeyPad")
     
 def send_card_command():
-    board.send_sysex(0x09, [])
+    global isCard
+    while isCard==False:
+        board.send_sysex(0x09, [])
+        time.sleep(0.5)
+    
 
 def on_key_received(c):
     global test, pos, isVerified, isAlarmOn, isWet
@@ -112,17 +117,31 @@ def trigger_alarm():
     return
 
 
-
 def waterSensor():
-    global isAlarmOn, isWet, isCard, isWaterSensorFinished, sensor_value
+    global isAlarmOn, isWet, isWaterSensorFinished, sensor_value, buttonCanBePressed
     sensor_value = a3_waterSensor.read()
-    print(sensor_value)
+    #print(sensor_value)
     if sensor_value > sensorLimit:
         print("in_water")
         isWet = True
-        isWaterSensorFinished=True
+        isWaterSensorFinished = True
         isAlarmOn = False
-        isCard = False
+
+        buttonCanBePressed = True
+
+
+def button_pressed():
+    global isButtonPressed, buttonCanBePressed, isCard
+    while 1:
+        value = d0_button.read()
+        print("value :", value)
+        if value == False:
+            isButtonPressed = True
+            buttonCanBePressed=False
+            isCard = False
+            print("Button_OK")
+            return
+
 
 
 def start_iterator():
@@ -150,19 +169,21 @@ if __name__ == '__main__':
         #    send_keypad_command()
             #envoyer un message au casque quand le code est bon
             
-        if isAlarmOn:
-            trigger_alarm()
+        #if isAlarmOn:
+        #    trigger_alarm()
             
         #if isWet == False:
         #    waterSensor()
             #envoyer un message au casque quand l'alarme est désactivé
             
-        #if isCard == False:
-        #    print("RFID")
-        #    send_card_command()
+        if isCard == False:
+            print("RFID")
+            send_card_command()
             #envoyer un message au casque quand la carte est passé
             
-        #button ?
+        #if isButtonPressed==False:
+            #print("Button")
+            #button_pressed()
             
         
         

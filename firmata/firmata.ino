@@ -49,7 +49,7 @@
 #include <MFRC522.h>
 // Affectation des broches
 #define RST_PIN 9
-#define SS_PIN 10
+#define SS_PIN 53
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 bool isCardPresented = false;
 

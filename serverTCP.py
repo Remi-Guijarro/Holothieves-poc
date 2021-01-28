@@ -13,11 +13,14 @@ from FirmataServer import *
 #import serial
 #from serial import *
 
-stopLoopVerified = False;
+#stopLoopVerified = False;
 
 keypadMsgSent=False
 waterMsgSent=False
 alarmActivated=False
+buttonMSGSent=False
+rfidMSGSent=False
+
 
 
 
@@ -62,29 +65,27 @@ def joystick_streaming(client_socket):
 
             client_msg = client_msg.decode("utf-8").strip()
 
-            print('#'+client_msg+'#')
+            #print('#'+client_msg+'#')
 
         except:
-            print("except")
+            #print("except")
             client_msg = ""
         if client_msg == "stop_read_joystick":
             print("stop_read_joystick")
             #write_command_to_arduino("stop_joystick_read\n")
             FirmataServer.isVentFinished = True
             FirmataServer.isVerified = False
-
             client_socket.setblocking(True)
             break
         else:
             #arduino_data = ser.readline()
             xValue , yValue = joystick_xy()
-            print(type(xValue))
             string = str(xValue)+";"+str(yValue)
             print(string)
             data = bytes(string, 'utf-8')
             #print(arduino_data)
             mysend(client_socket, data)
-            print("ok")
+            #print("ok")
     return
 
 
@@ -149,22 +150,29 @@ if __name__ == "__main__":
         if msg == "read_joystick" and FirmataServer.isVentFinished==False:
             print("read_joystick")
             joystick_streaming(client)
-
-            print("sortie joystick_streaming")
-        if FirmataServer.isVerified and stopLoopVerified==False:
-            print("code bon")
-            stopLoopVerified=True
+            #print("sortie joystick_streaming")
+        #if FirmataServer.isVerified and stopLoopVerified==False:
+        #   print("code bon")
+        #    stopLoopVerified=True
 
         if FirmataServer.isVerified==False and FirmataServer.isVentFinished==True:
             _thread.start_new_thread(send_keypad_command, ())
         if FirmataServer.isWet==False and FirmataServer.isVerified==True:
-            #waterSensor()
             _thread.start_new_thread(waterSensor, ( ))
-            print("waterSensor")
+            #print("waterSensor")
         if FirmataServer.isAlarmOn and not alarmActivated:
             _thread.start_new_thread(trigger_alarm, ())
             alarmActivated=True
             print(alarmActivated)
+
+        if FirmataServer.buttonCanBePressed:
+            print("button")
+            _thread.start_new_thread(button_pressed, ())
+
+        if FirmataServer.isCard==False and FirmataServer.buttonCanBePressed==False and msg=="read_RFID":
+            print("RFID")
+            _thread.start_new_thread(send_card_command, ())
+
 
         #if FirmataServer.isCard == False:
         #    send_card_command()
@@ -178,11 +186,23 @@ if __name__ == "__main__":
             mysend(client, keypad_data)
             keypadMsgSent=True
         if FirmataServer.isWaterSensorFinished and waterMsgSent==False:
-            print("Send()")
+            #print("Send()")
             str = "Water_"
             water_data = bytes(str, 'utf-8')
             mysend(client, water_data)
             waterMsgSent=True
+        if FirmataServer.isButtonPressed and buttonMSGSent==False:
+            str = "Button_"
+            button_data = bytes(str, 'utf-8')
+            mysend(client, button_data)
+            buttonMSGSent = True
+        if FirmataServer.isCard and FirmataServer.isButtonPressed and rfidMSGSent==False:
+            print("Send RFID")
+            str = "RFID_"
+            rfid_data = bytes(str, 'utf-8')
+            mysend(client, rfid_data)
+            rfidMSGSent==True
+
         #if FirmataServer.isWet==True and FirmataServer.isCard==True:
         #    mysend(client, "RFID_OK")
 
