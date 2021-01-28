@@ -159,31 +159,34 @@ if __name__ == '__main__':
         
         #attend le casque
         
-        #if isVentFinished == False:
-        #    xy = joystick_xy()
+        if isVentFinished == False:
             #envoie xy au caque
             #change la valeur de isVentFinished à True quand le drone est à la fin du labyrinthe
             #change la valeur de isVerified à False """"""
+            xy = joystick_xy()
+
             
-        #if isVerified == False:
-        #    send_keypad_command()
+        if isVerified == False:
             #envoyer un message au casque quand le code est bon
+            send_keypad_command()            
             
-        #if isAlarmOn:
-        #    trigger_alarm()
+        if isAlarmOn:
+            trigger_alarm()
             
-        #if isWet == False:
-        #    waterSensor()
+        if isWet == False:
             #envoyer un message au casque quand l'alarme est désactivé
+            waterSensor()
+
             
         if isCard == False:
+            #envoyer un message au casque quand la carte est passé
             print("RFID")
             send_card_command()
-            #envoyer un message au casque quand la carte est passé
+
             
-        #if isButtonPressed==False:
-            #print("Button")
-            #button_pressed()
+        if isButtonPressed==False:
+            print("Button")
+            button_pressed()
             
         
         
