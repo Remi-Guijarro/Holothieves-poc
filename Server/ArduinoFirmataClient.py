@@ -143,53 +143,9 @@ def button_pressed():
             return
 
 
-
 def start_iterator():
     it = pyfirmata.util.Iterator(board)
     it.start()
     board.add_cmd_handler(pyfirmata.pyfirmata.STRING_DATA, on_message_received)
 
-if __name__ == '__main__':
-    #la fonction main est à déplacer dans le serveur TCP
-    start_iterator()
     
-    print("loop")
-    while True:
-        time.sleep(0.1)
-        
-        #attend le casque
-        
-        if isVentFinished == False:
-            #envoie xy au caque
-            #change la valeur de isVentFinished à True quand le drone est à la fin du labyrinthe
-            #change la valeur de isVerified à False """"""
-            xy = joystick_xy()
-
-            
-        if isVerified == False:
-            #envoyer un message au casque quand le code est bon
-            send_keypad_command()            
-            
-        if isAlarmOn:
-            trigger_alarm()
-            
-        if isWet == False:
-            #envoyer un message au casque quand l'alarme est désactivé
-            waterSensor()
-
-            
-        if isCard == False:
-            #envoyer un message au casque quand la carte est passé
-            print("RFID")
-            send_card_command()
-
-            
-        if isButtonPressed==False:
-            print("Button")
-            button_pressed()
-            
-        
-        
-        
-        
-
