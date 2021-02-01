@@ -2,8 +2,8 @@ import socket
 import pyfirmata
 import _thread
 import time
-import arduinoFirmataClient
-from arduinoFirmataClient import *
+import firmataClient
+from firmataClient import *
 
 #Booléens permettant de lancer les différents threads une seule fois
 keypadLaunched=False
@@ -65,8 +65,8 @@ def joystick_streaming(client_socket):
         if client_msg == "stop_read_joystick":
             print("stop_read_joystick")
             #Ceci veut dire que l'on a fini le labyrinthe donc on change les différents booléens
-            arduinoFirmataClient.isVentFinished = True
-            arduinoFirmataClient.isVerified = False
+            firmataClient.isVentFinished = True
+            firmataClient.isVerified = False
             client_socket.setblocking(True)
             #On sort de la méthode (i.e. on arrete de stream le joystick au casque)
             break
@@ -117,60 +117,60 @@ if __name__ == "__main__":
             msg = ""
 
         #Si le client nous a envoyé le message "read_joystick"
-        if msg == "read_joystick" and arduinoFirmataClient.isVentFinished==False:
+        if msg == "read_joystick" and firmataClient.isVentFinished==False:
             #On lance le streaming du joystick
             print("read_joystick")
             joystick_streaming(client)
 
         #Si on veut les valeurs du digicode
-        if arduinoFirmataClient.isVerified==False and arduinoFirmataClient.isVentFinished==True and keypadLaunched==False:
+        if firmataClient.isVerified==False and firmataClient.isVentFinished==True and keypadLaunched==False:
             print("Keypad launched !")
             _thread.start_new_thread(send_keypad_command, ())
             keypadLaunched = True
 
         #Si on veut les valeurs du water level sensor
-        if arduinoFirmataClient.isWet==False and arduinoFirmataClient.isVerified==True and waterLaunched==False:
+        if firmataClient.isWet==False and firmataClient.isVerified==True and waterLaunched==False:
             _thread.start_new_thread(waterSensor, ( ))
             waterLaunched=True
             print("water launched !")
 
         #Si on veut déclencher l'alarme réelle (LED rouge + active buzzer)
-        if arduinoFirmataClient.isAlarmOn and not alarmActivated:
+        if firmataClient.isAlarmOn and not alarmActivated:
             _thread.start_new_thread(trigger_alarm, ())
             alarmActivated=True
             print(alarmActivated)
 
         #Si on veut streamer le bouton réel
-        if arduinoFirmataClient.buttonCanBePressed and arduinoFirmataClient.bothButtonsArePressed==False and buttonLaunched==False:
+        if firmataClient.buttonCanBePressed and firmataClient.bothButtonsArePressed==False and buttonLaunched==False:
             print("button")
             _thread.start_new_thread(button_pressed, ())
             buttonLaunched=True
 
         #Si on reçoit un message du casque disant que les 2 boutons ont été appuyés en meme temps
         if msg=="read_RFID":
-            arduinoFirmataClient.bothButtonsArePressed=True
+            firmataClient.bothButtonsArePressed=True
         # Si on veut lancer le capteur RFID
-        if arduinoFirmataClient.isCard==False and arduinoFirmataClient.bothButtonsArePressed==True and RFIDLaunched==False: #and msg=="read_RFID":
+        if firmataClient.isCard==False and firmataClient.bothButtonsArePressed==True and RFIDLaunched==False: #and msg=="read_RFID":
             print("RFID")
             RFIDLaunched=True
             send_card_command()
         #On gère ici les envoit des différents messages de réussite des éléments IoT au casque afin qu'il puisse déclencher les bonnes actions de jeu
-        if arduinoFirmataClient.isVentFinished==True and arduinoFirmataClient.isVerified==True and keypadMsgSent==False:
+        if firmataClient.isVentFinished==True and firmataClient.isVerified==True and keypadMsgSent==False:
             str = "Keypad_OK"
             keypad_data = bytes(str, 'utf-8')
             mysend(client, keypad_data)
             keypadMsgSent=True
-        if arduinoFirmataClient.isWaterSensorFinished and waterMsgSent==False:
+        if firmataClient.isWaterSensorFinished and waterMsgSent==False:
             #print("Send()")
             str = "Water_"
             water_data = bytes(str, 'utf-8')
             mysend(client, water_data)
             waterMsgSent=True
-        if arduinoFirmataClient.isButtonPressed and buttonMSGSent==False:
+        if firmataClient.isButtonPressed and buttonMSGSent==False:
             str = "Button_"
             button_data = bytes(str, 'utf-8')
             mysend(client, button_data)
-        if arduinoFirmataClient.isCard and arduinoFirmataClient.bothButtonsArePressed and rfidMSGSent==False:
+        if firmataClient.isCard and firmataClient.bothButtonsArePressed and rfidMSGSent==False:
             rfidMSGSent = True
             print("Send RFID")
             str = "RFID_"
