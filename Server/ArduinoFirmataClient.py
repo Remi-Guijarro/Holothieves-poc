@@ -1,4 +1,3 @@
-
 import pyfirmata
 import time
 
