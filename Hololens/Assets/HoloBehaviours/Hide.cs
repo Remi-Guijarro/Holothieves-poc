@@ -1,11 +1,13 @@
 ﻿using Holo;
 
+//Script permettant désactiver le curseur blanc au centre du casque
 public class Hide : HoloBehaviour
 {
-    [GazeComponent] private GazeComponent gazeComponent;
+    
     public override void Start()
     {
-        gazeComponent.attribute.UseSnap = false;
+        GazerHelper.ShowCursor(false);
+        
     }
 
 
@@ -13,4 +15,10 @@ public class Hide : HoloBehaviour
     {
         
     }
+
+    public override void OnDestroy()
+    {
+        GazerHelper.ShowCursor(true);
+    }
+
 }
