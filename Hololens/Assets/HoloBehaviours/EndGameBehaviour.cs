@@ -1,23 +1,28 @@
 ﻿using Holo;
 
+//Script rattaché au panneau de téléchargement des données qui s'affiche après que le capteur RFID ait été activé
 public class EndGameBehaviour : HoloBehaviour
 {
-    //GO à faire disparaitre
+    //GameObjects à faire disparaitre
     [Serialized] private HoloGameObject realWifi;
     [Serialized] private HoloGameObject fakeWifi1;
     [Serialized] private HoloGameObject fakeWifi2;
     [Serialized] private HoloGameObject finalBoard;
     [Serialized] private HoloGameObject virtualButtonE3;
+    [Serialized] private HoloGameObject triangle;
+    [Serialized] private HoloGameObject circle;
+    [Serialized] private HoloGameObject hexagon;
+    [Serialized] private HoloGameObject equation;
 
 
-    [Serialized] private HoloGameObject doneesTelechargeesGO;
+
+    //GameObject permettant de trigger le lancement du timer
     [Serialized] private HoloGameObject cube10_TriggerEndGame;
 
 
-    private float timerGODisapearance = 0f;
+    //Delais avant disparrition de tous les objets de la scene à la fin du jeu
     [Serialized] private float timerDelay;
-    private float timerButtons = 0f;
-    [Serialized] private float timerButtonsDelay;
+
 
 
     public override void Start()
@@ -28,24 +33,27 @@ public class EndGameBehaviour : HoloBehaviour
     public void Update()
     {
         
-
-
         if (cube10_TriggerEndGame.activeSelf)
         {
-            //doneesTelechargeesGO.SetActive(true);
 
-            timerGODisapearance += 1f / 60f;
-
-            if (timerGODisapearance >= timerDelay)
-            {
-                realWifi.SetActive(false);
-                fakeWifi1.SetActive(false);
-                fakeWifi2.SetActive(false);
-                finalBoard.SetActive(false);
-                virtualButtonE3.SetActive(false);
-            }
+            Async.InvokeAfterSeconds(TimerFinDeJeu, timerDelay);
+            
         }
 
+
+    }
+
+    public void TimerFinDeJeu()
+    {
+        realWifi.SetActive(false);
+        fakeWifi1.SetActive(false);
+        fakeWifi2.SetActive(false);
+        finalBoard.SetActive(false);
+        virtualButtonE3.SetActive(false);
+        triangle.SetActive(false);
+        circle.SetActive(false);
+        hexagon.SetActive(false);
+        equation.SetActive(false);
 
     }
 
