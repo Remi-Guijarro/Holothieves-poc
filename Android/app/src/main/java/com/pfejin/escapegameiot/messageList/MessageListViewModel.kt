@@ -185,6 +185,57 @@ class MessageListViewModel : ViewModel() {
             ),
     )
 
+    private val thirdHintGMList = listOf<Message>(
+        Message(
+            MessageAuthor.GAME_MASTER,
+            """
+                    Je ne peux pas plus vous aider.
+                    """.trimIndent()
+        ),
+        Message(
+            MessageAuthor.GAME_MASTER,
+            """
+                    Je ne peux pas plus vous aider.
+                    """.trimIndent()
+        ),
+        Message(
+            MessageAuthor.GAME_MASTER,
+            """
+                    Aider vous du nombre de côtés des figures apparaissant dans le casque, du calendrier et du code couleur pour trouver le code à 4 chiffres.
+                    """.trimIndent()
+        ),
+        Message(
+            MessageAuthor.GAME_MASTER,
+            """
+                    Je ne peux pas plus vous aider.
+                    """.trimIndent()
+        ),
+        Message(
+            MessageAuthor.GAME_MASTER,
+            """
+                    Je ne peux pas plus vous aider.
+                    """.trimIndent()
+        ),
+        Message(
+            MessageAuthor.GAME_MASTER,
+            """
+                    Je ne peux pas plus vous aider.
+                    """.trimIndent()
+        ),
+        Message(
+            MessageAuthor.GAME_MASTER,
+            """
+                    Je ne peux pas plus vous aider.
+                    """.trimIndent()
+        ),
+        Message(
+            MessageAuthor.GAME_MASTER,
+            """
+                    Je ne peux pas plus vous aider.
+                    """.trimIndent()
+        ),
+    )
+
     private val finishedGMList = listOf<Message>(
             Message(
                     MessageAuthor.GAME_MASTER,
@@ -244,6 +295,7 @@ class MessageListViewModel : ViewModel() {
             when (hintIndex) {
                 0 -> editableList.add(firstHintGMList[index])
                 1 -> editableList.add(secondHintGMList[index])
+                2 -> editableList.add(thirdHintGMList[index])
                 else -> editableList.add(
                         Message(
                                 MessageAuthor.GAME_MASTER,
