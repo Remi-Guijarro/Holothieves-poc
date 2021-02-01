@@ -1,27 +1,18 @@
 import socket
-#import importlib
-
 import pyfirmata
 import _thread
 import time
-
 import FirmataServer
 from FirmataServer import *
-#import FirmataServer as firmataServer
 
-
-#import serial
-#from serial import *
-
-#stopLoopVerified = False;
-
+#Booléens permettant de lancer les différents threads une seule fois
 keypadLaunched=False
 waterLaunched=False
 alarmLaunched=False
 buttonLaunched=False
 RFIDLaunched=False
 
-
+#Booléen permettant d'envoyer une seule fois les message de réussite de chaque élément IoT au casque
 keypadMsgSent=False
 waterMsgSent=False
 alarmActivated=False
@@ -29,15 +20,7 @@ buttonMSGSent=False
 rfidMSGSent=False
 
 
-
-
-#ser = serial.Serial('COM4', 115200, write_timeout=4)
-
-
-#def write_command_to_arduino(command):
-    #ser.write(command.encode())
-
-
+#Méthode permettant de faire un envoie de message au client TCP (casque) sans perdre de message
 def mysend(client_socket, data):
         totalsent = 0
         MSGLEN = len(data)
@@ -47,7 +30,7 @@ def mysend(client_socket, data):
                 raise RuntimeError("socket connection broken")
             totalsent = totalsent + sent
 
-
+#Méthode permettant de faire une réception de message venant du client TCP (casque) sans perdre de message
 def myreceive(_socket):
         chunks = []
         MSGLEN = 2048
@@ -60,84 +43,72 @@ def myreceive(_socket):
             bytes_recd = bytes_recd + len(chunk)
         return b''.join(chunks)
 
-
+#Méthode gérant le streaming du joystick
 def joystick_streaming(client_socket):
     #write_command_to_arduino("read_joystick")
 
     client_socket.setblocking(False)
+    #Tant qu'on ne rencontre pas re "return" ou un "break"
     while 1:
+        #Délais permettant de ne pas avoir trop de perte de FPS liée au streaming dans le casque
         time.sleep(0.5)
+
+        #On regarde si le casque nous a envoyé un message
         try:
             client_msg = client_socket.recv(1024)
-
+            #On transform le message en string
             client_msg = client_msg.decode("utf-8").strip()
-
-            #print('#'+client_msg+'#')
-
         except:
             #print("except")
             client_msg = ""
+            #Si on a reçu un message du casque "stop_read_joystick"
         if client_msg == "stop_read_joystick":
             print("stop_read_joystick")
-            #write_command_to_arduino("stop_joystick_read\n")
+            #Ceci veut dire que l'on a fini le labyrinthe donc on change les différents booléens
             FirmataServer.isVentFinished = True
             FirmataServer.isVerified = False
             client_socket.setblocking(True)
+            #On sort de la méthode (i.e. on arrete de stream le joystick au casque)
             break
+        #Si on doit toujours stream le joystick au casque
         else:
-            #arduino_data = ser.readline()
+            #On appelle la méthode joystick_xy() de FirmataServer.py afin de récupérer les valeurs en X et Y du joystick
             xValue , yValue = joystick_xy()
+            #On traite ces valeurs afin de les envoyer au casque
             string = str(xValue)+";"+str(yValue)
             print(string)
             data = bytes(string, 'utf-8')
-            #print(arduino_data)
+            #On envoie les valeurs du joystick au casque
             mysend(client_socket, data)
-            #print("ok")
+
     return
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-
-
+#Méthode "main" appelée à chaque frame
 if __name__ == "__main__":
-
+    #On choisit le port sur lequel on va communiquer avec le casque
     PORT = 8888
 
+    #On crée une socket serveur
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #On bind la socket serveur sur le port choisis
     server_socket.bind(('', PORT))
     print("waiting on port:", PORT)
+    #On place le serveur en mode écoute, il attend donc qu'un client TCP se connecte à lui (le casque)
     server_socket.listen(5)
+    #client = socket client TCP, address = adresse IP du client TCP
     client, address = server_socket.accept()
     print("{} connected".format(address))
 
     start_iterator()
 
-    #Joystick
-    #a0 = boardJoystick.get_pin('a:0:i')
-    #a1 = boardJoystick.get_pin('a:1:i')
-    #itJoystick = pyfirmata.util.Iterator(boardJoystick)
-    #itJoystick.start()
-
-
+    #On lance une boucle infinie tant que l'on ne s'est pas déconnecté du client
     while 1:
         time.sleep(0.1)
-        #msg = myreceive(client)
+
         client.setblocking(False)
-        #msg=""
+
+        #On essaye de récupérer un message provenant du client TCP
         try:
             msg = client.recv(1024)
             msg = msg.decode("utf-8").strip()
@@ -146,57 +117,49 @@ if __name__ == "__main__":
             msg = ""
 
 
-        #msg = client.recv(1024)
-        #msg = msg.decode("utf-8")
 
-
-
-        #print(msg)
-        #print("b'read_joystick'")
-
+        #Si le client nous a envoyé le message "read_joystick"
         if msg == "read_joystick" and FirmataServer.isVentFinished==False:
+            #On lance le streaming du joystick
             print("read_joystick")
             joystick_streaming(client)
-            #print("sortie joystick_streaming")
-        #if FirmataServer.isVerified and stopLoopVerified==False:
-        #   print("code bon")
-        #    stopLoopVerified=True
 
+        #Si on veut les valeurs du digicode
         if FirmataServer.isVerified==False and FirmataServer.isVentFinished==True and keypadLaunched==False:
             print("Keypad launched !")
             _thread.start_new_thread(send_keypad_command, ())
             keypadLaunched = True
 
+        #Si on veut les valeurs du water level sensor
         if FirmataServer.isWet==False and FirmataServer.isVerified==True and waterLaunched==False:
             _thread.start_new_thread(waterSensor, ( ))
-            _thread.start_new_thread(trigger_alarm, ())
             waterLaunched=True
             print("water launched !")
-            #print("waterSensor")
+
+        #Si on veut déclencher l'alarme réelle (LED rouge + active buzzer)
         if FirmataServer.isAlarmOn and not alarmActivated:
-            #_thread.start_new_thread(trigger_alarm, ())
+            _thread.start_new_thread(trigger_alarm, ())
             alarmActivated=True
             print(alarmActivated)
 
+        #Si on veut streamer le bouton réel
         if FirmataServer.buttonCanBePressed and FirmataServer.bothButtonsArePressed==False and buttonLaunched==False:
             print("button")
             _thread.start_new_thread(button_pressed, ())
             buttonLaunched=True
+
+        #Si on reçoit un message du casque disant que les 2 boutons ont été appuyés en meme temps
         if msg=="read_RFID":
             FirmataServer.bothButtonsArePressed=True
-
+        # Si on veut lancer le capteur RFID
         if FirmataServer.isCard==False and FirmataServer.bothButtonsArePressed==True and RFIDLaunched==False: #and msg=="read_RFID":
             print("RFID")
             RFIDLaunched=True
             send_card_command()
 
 
-        #if FirmataServer.isCard == False:
-        #    send_card_command()
 
-        #FirmataServer.sensor_value = FirmataServer.a3_waterSensor.read()
-        #print(FirmataServer.sensor_value)
-
+        #On gère ici les envoit des différents messages de réussite des éléments IoT au casque afin qu'il puisse déclencher les bonnes actions de jeu
         if FirmataServer.isVentFinished==True and FirmataServer.isVerified==True and keypadMsgSent==False:
             str = "Keypad_OK"
             keypad_data = bytes(str, 'utf-8')
@@ -218,18 +181,10 @@ if __name__ == "__main__":
             str = "RFID_"
             rfid_data = bytes(str, 'utf-8')
             mysend(client, rfid_data)
-        elif msg == "disconnection":
+        #Si on reçoit le message "disconnection" venant du casque, alors on déconnecte le casque du serveur et on eteint le serveur TCP
+        if msg == "disconnection":
             print("Close")
             client.close()
             server_socket.close()
             break
 
-
-        #if FirmataServer.isWet==True and FirmataServer.isCard==True:
-        #    mysend(client, "RFID_OK")
-
-
-        #elif msg == "read_keypad":
-        #    print("read_keypad")
-        #    keypad_streaming(client)
-        #    print("sortie keypad_streaming")
