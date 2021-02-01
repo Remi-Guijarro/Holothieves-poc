@@ -15,6 +15,13 @@ from FirmataServer import *
 
 #stopLoopVerified = False;
 
+keypadLaunched=False
+waterLaunched=False
+alarmLaunched=False
+buttonLaunched=False
+RFIDLaunched=False
+
+
 keypadMsgSent=False
 waterMsgSent=False
 alarmActivated=False
@@ -130,13 +137,13 @@ if __name__ == "__main__":
         time.sleep(0.1)
         #msg = myreceive(client)
         client.setblocking(False)
-        msg=""
+        #msg=""
         try:
             msg = client.recv(1024)
             msg = msg.decode("utf-8").strip()
             print("msg : "+msg)
         except:
-            client_msg = ""
+            msg = ""
 
 
         #msg = client.recv(1024)
@@ -155,23 +162,33 @@ if __name__ == "__main__":
         #   print("code bon")
         #    stopLoopVerified=True
 
-        if FirmataServer.isVerified==False and FirmataServer.isVentFinished==True:
+        if FirmataServer.isVerified==False and FirmataServer.isVentFinished==True and keypadLaunched==False:
+            print("Keypad launched !")
             _thread.start_new_thread(send_keypad_command, ())
-        if FirmataServer.isWet==False and FirmataServer.isVerified==True:
+            keypadLaunched = True
+
+        if FirmataServer.isWet==False and FirmataServer.isVerified==True and waterLaunched==False:
             _thread.start_new_thread(waterSensor, ( ))
+            _thread.start_new_thread(trigger_alarm, ())
+            waterLaunched=True
+            print("water launched !")
             #print("waterSensor")
         if FirmataServer.isAlarmOn and not alarmActivated:
-            _thread.start_new_thread(trigger_alarm, ())
+            #_thread.start_new_thread(trigger_alarm, ())
             alarmActivated=True
             print(alarmActivated)
 
-        if FirmataServer.buttonCanBePressed:
+        if FirmataServer.buttonCanBePressed and FirmataServer.bothButtonsArePressed==False and buttonLaunched==False:
             print("button")
             _thread.start_new_thread(button_pressed, ())
+            buttonLaunched=True
+        if msg=="read_RFID":
+            FirmataServer.bothButtonsArePressed=True
 
-        if FirmataServer.isCard==False and FirmataServer.buttonCanBePressed==False and msg=="read_RFID":
+        if FirmataServer.isCard==False and FirmataServer.bothButtonsArePressed==True and RFIDLaunched==False: #and msg=="read_RFID":
             print("RFID")
-            _thread.start_new_thread(send_card_command, ())
+            RFIDLaunched=True
+            send_card_command()
 
 
         #if FirmataServer.isCard == False:
@@ -195,13 +212,18 @@ if __name__ == "__main__":
             str = "Button_"
             button_data = bytes(str, 'utf-8')
             mysend(client, button_data)
-            buttonMSGSent = True
-        if FirmataServer.isCard and FirmataServer.isButtonPressed and rfidMSGSent==False:
+        if FirmataServer.isCard and FirmataServer.bothButtonsArePressed and rfidMSGSent==False:
+            rfidMSGSent = True
             print("Send RFID")
             str = "RFID_"
             rfid_data = bytes(str, 'utf-8')
             mysend(client, rfid_data)
-            rfidMSGSent==True
+        elif msg == "disconnection":
+            print("Close")
+            client.close()
+            server_socket.close()
+            break
+
 
         #if FirmataServer.isWet==True and FirmataServer.isCard==True:
         #    mysend(client, "RFID_OK")
@@ -211,8 +233,3 @@ if __name__ == "__main__":
         #    print("read_keypad")
         #    keypad_streaming(client)
         #    print("sortie keypad_streaming")
-        #elif msg == "disconnection":
-        #    print("Close")
-        #    client.close()
-        #    server_socket.close()
-        #    break
